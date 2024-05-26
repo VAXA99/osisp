@@ -136,9 +136,9 @@ LPTHREAD_START_ROUTINE FirstOperationThreadProc(LPVOID lpParam)
 
 LPTHREAD_START_ROUTINE SecondOperationThreadProc(LPVOID lpParam)
 {
-    std::cout << "Вход в критический участок кода: " << clock() << std::endl;
     EnterCriticalSection(&cs);
     LogJournal *p = (LogJournal *)lpParam;
+    p->enteringCriticalSectionTime = clock();
     std::string Rbuf;
     int currentKeyCode = p->pressedKeyCode;
 
@@ -155,8 +155,9 @@ LPTHREAD_START_ROUTINE SecondOperationThreadProc(LPVOID lpParam)
     R = Rbuf;
     p->R = R;
     p->operationEndTime = clock();
+    p->waitingTime = p->operationEndTime - p->operationStartTime;
+    p->leavingCriticalSectionTime = clock();
     LeaveCriticalSection(&cs);
-    std::cout << "Выход из критического участка кода: " << clock() << std::endl;
 
     return 0;
 }

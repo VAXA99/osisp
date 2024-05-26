@@ -5,9 +5,8 @@
 #include <string>
 #include <iomanip>
 
-// Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ
+// Глобальные переменные
 std::string sharedString = "ABCDE";
-int currentKeyCode;
 clock_t delayTime = 200;
 HANDLE hThread;
 DWORD threadID;
@@ -19,14 +18,15 @@ struct LogJournal
     DWORD threadID;
     clock_t operationStartTime;
     clock_t operationEndTime;
-    std::string sharedString;  // Р Р°Р·РґРµР»СЏРµРјР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ
-    std::string controlString; // Р РµР·СѓР»СЊС‚Р°С‚ РѕРїРµСЂР°С†РёРё РІ РіР»Р°РІРЅРѕРј РїРѕС‚РѕРєРµ
+    std::string sharedString;  // Разделяемая переменная
+    std::string controlString; // Результат операции в главном потоке
 } logJournal[1000];
 
 void delay(clock_t delayTime)
 {
     clock_t start = clock();
-    while (clock() - start < delayTime);
+    while (clock() - start < delayTime)
+        ;
 }
 
 bool isKeyPressed()
@@ -34,12 +34,14 @@ bool isKeyPressed()
     return (GetAsyncKeyState(VK_LEFT) & 0x8000) || (GetAsyncKeyState(VK_RIGHT) & 0x8000);
 }
 
-void getKeyCode()
+int getKeyCode()
 {
+    int currentKey = 0;
+
     if (GetAsyncKeyState(VK_LEFT) & 0x8000)
     {
-        std::cout << "Left arrow key pressed\n";
-        currentKeyCode = VK_LEFT;
+        currentKey = VK_LEFT;
+
         while (GetAsyncKeyState(VK_LEFT) & 0x8000)
         {
             Sleep(50);
@@ -47,18 +49,20 @@ void getKeyCode()
     }
     else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
     {
-        std::cout << "Right arrow key pressed\n";
-        currentKeyCode = VK_RIGHT;
+        currentKey = VK_RIGHT;
         while (GetAsyncKeyState(VK_RIGHT) & 0x8000)
         {
             Sleep(50);
         }
     }
+
+    return currentKey;
 }
 
 std::string shiftString(const std::string &str, bool isLeft)
 {
-    if (str.empty()) return str;
+    if (str.empty())
+        return str;
 
     if (isLeft)
     {
@@ -73,6 +77,7 @@ std::string shiftString(const std::string &str, bool isLeft)
 DWORD WINAPI operationThreadProc(LPVOID param)
 {
     LogJournal *logEntry = static_cast<LogJournal *>(param);
+    int currentKeyCode = logEntry->pressedKeyCode;
     bool isLeft = (currentKeyCode == VK_LEFT);
 
     std::string buffer = sharedString;
@@ -111,10 +116,18 @@ void displayLogJournalEntry(const LogJournal &entry)
               << std::setw(6) << entry.controlString << std::endl;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
+
+    if (argc != 2)
+    {
+        printf("Использование: %s <время задержки>\n", argv[0]);
+        return 1;
+    }
+
+    delayTime = atoi(argv[1]);
 
     int operationIndex = 0;
     int displayIndex = 1;
@@ -128,7 +141,7 @@ int main()
     {
         if (isKeyPressed())
         {
-            getKeyCode();
+            int currentKeyCode = getKeyCode();
 
             operationIndex++;
             logJournal[operationIndex].operationNumber = operationIndex;
