@@ -7,7 +7,7 @@
 
 // ���������� ����������
 std::string sharedString = "ABCDE";
-clock_t delayTime = 200;
+clock_t delayTime;
 HANDLE hThread;
 DWORD threadID;
 
