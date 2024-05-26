@@ -5,7 +5,7 @@
 #include <string>
 #include <iomanip>
 
-// Глобальные переменные
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 std::string sharedString = "ABCDE";
 clock_t delayTime = 200;
 HANDLE hThread;
@@ -18,8 +18,8 @@ struct LogJournal
     DWORD threadID;
     clock_t operationStartTime;
     clock_t operationEndTime;
-    std::string sharedString;  // Разделяемая переменная
-    std::string controlString; // Результат операции в главном потоке
+    std::string sharedString;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    std::string controlString; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 } logJournal[1000];
 
 void delay(clock_t delayTime)
@@ -102,7 +102,7 @@ void displayLogJournalHeader()
               << std::setw(9) << "End Time" << " | "
               << std::setw(6) << "R" << " | "
               << std::setw(6) << "Rc" << std::endl;
-    std::cout << "---------------------------------------------------------------" << std::endl;
+    std::cout << "------------------------------------------------------------------------------" << std::endl;
 }
 
 void displayLogJournalEntry(const LogJournal &entry)
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
     if (argc != 2)
     {
-        printf("Использование: %s <время задержки>\n", argv[0]);
+        printf("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: %s <пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ>\n", argv[0]);
         return 1;
     }
 
@@ -148,11 +148,14 @@ int main(int argc, char *argv[])
             logJournal[operationIndex].pressedKeyCode = currentKeyCode;
             logJournal[operationIndex].operationEndTime = 0;
             logJournal[operationIndex].sharedString = "";
-            logJournal[operationIndex].controlString = controlString;
             logJournal[operationIndex].operationStartTime = clock();
 
             hThread = CreateThread(NULL, 0, operationThreadProc, &logJournal[operationIndex], CREATE_SUSPENDED, &threadID);
+            bool isLeft = (currentKeyCode == VK_LEFT);
+            controlString = shiftString(controlString, isLeft);
+
             logJournal[operationIndex].threadID = threadID;
+            logJournal[operationIndex].controlString = controlString;
             ResumeThread(hThread);
         }
 
