@@ -107,7 +107,7 @@ DWORD WINAPI processFileThread(LPVOID lpParam)
 
 void writeToJSON(const std::string &filename)
 {
-    std::string outputFilename = ssdDirectoryOut + filename; // Add the directory path
+    std::string outputFilename = flashDirectoryOut + filename; // Add the directory path
     json jsonData;
 
     json programTimes;
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        std::string inputFilename = std::string(ssdDirectoryIn) + argv[i];
+        std::string inputFilename = std::string(flashDirectoryIn) + argv[i];
         if (fileNamesSet.find(inputFilename) != fileNamesSet.end())
         {
             std::cout << "File '" << inputFilename << "' reoccurs. Skipping." << std::endl;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
         }
         fileNamesSet.insert(inputFilename);
 
-        std::string outputFilename = std::string(ssdDirectoryOut) + "out_" + argv[i];
+        std::string outputFilename = std::string(flashDirectoryOut) + "out_" + argv[i];
 
         std::pair<std::string, std::string> *filePair = new std::pair<std::string, std::string>(inputFilename, outputFilename);
 
