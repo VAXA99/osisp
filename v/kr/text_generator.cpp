@@ -4,12 +4,12 @@
 #include <cstdlib>
 #include <ctime>
 
-const int NUM_FILES = 10;            
-const int TARGET_FILE_SIZE = 1000000; 
+const int NUM_FILES = 10;
+const int TARGET_FILE_SIZE = 10000000; // Increased target file size to generate larger texts
 
 std::string generateText()
 {
-    std::string vowels = "aeiouAEIOU";                                     
+    std::string vowels = "aeiouAEIOU";
     std::string consonants = "bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ";
 
     std::string text;
@@ -17,7 +17,7 @@ std::string generateText()
 
     while (fileSize < TARGET_FILE_SIZE)
     {
-        int length = rand() % 50 + 10; 
+        int length = rand() % 50 + 10;
 
         for (int i = 0; i < length; ++i)
         {
@@ -39,13 +39,14 @@ std::string generateText()
 
 int main()
 {
-    srand(time(nullptr)); 
+    srand(time(nullptr));
 
-    std::string directory = "files/in/"; 
+    std::string ssdDirectory = "C:\\CodingProjects\\C++\\osisp\\v\\kr\\files\\in\\";
+    std::string flashDirectory = "E:\\files\\in\\";
 
     for (int i = 1; i <= NUM_FILES; ++i)
     {
-        std::string filename = directory + std::to_string(i) + ".txt";
+        std::string filename = flashDirectory + std::to_string(i) + ".txt";
         std::ofstream file(filename);
 
         if (!file.is_open())

@@ -19,11 +19,15 @@ struct FileProcessingTime
 };
 
 std::vector<FileProcessingTime> fileProcessingTimes;
-
-// Set to store filenames
 std::unordered_set<std::string> fileNamesSet;
 clock_t startTime;
 clock_t endTime;
+
+std::string ssdDirectoryIn = "C:\\CodingProjects\\C++\\osisp\\v\\kr\\files\\in\\";
+std::string ssdDirectoryOut = "C:\\CodingProjects\\C++\\osisp\\v\\kr\\files\\out\\";
+
+std::string flashDirectoryIn = "E:\\files\\in\\";
+std::string flashDirectoryOut = "E:\\files\\out\\";
 
 // Function to check if a character is a vowel
 bool isVowel(char c)
@@ -91,26 +95,28 @@ void processFile(const std::string &inputFilename, const std::string &outputFile
     std::cout << "Text processed and saved to '" << outputFilename << "'." << std::endl;
 }
 
-void writeToJSON(const std::string& filename)
+void writeToJSON(const std::string &filename)
 {
-    std::string outputFilename = "files/out/" + filename; // Add the directory path
+    std::string outputFilename = ssdDirectoryOut + filename; // Add the directory path
     json jsonData;
 
     json programTimes;
-    programTimes["start_program_time"] = startTime;
-    programTimes["end_program_time"] = endTime;
+    programTimes["start_program_time"] = static_cast<double>(startTime) / CLOCKS_PER_SEC;
+    programTimes["end_program_time"] = static_cast<double>(endTime) / CLOCKS_PER_SEC;
+    programTimes["elapse_program_time"] = static_cast<double>(endTime - startTime) / CLOCKS_PER_SEC;
 
     jsonData["program_times"] = programTimes;
 
     // Create a JSON array to hold file data
     json filesArray = json::array();
 
-    for (const auto& processingTime : fileProcessingTimes)
+    for (const auto &processingTime : fileProcessingTimes)
     {
         json fileData;
         fileData["filename"] = processingTime.filename;
-        fileData["start_time"] = processingTime.start_time;
-        fileData["end_time"] = processingTime.end_time;
+        fileData["start_time_seconds"] = static_cast<double>(processingTime.start_time) / CLOCKS_PER_SEC;
+        fileData["end_time_seconds"] = static_cast<double>(processingTime.end_time) / CLOCKS_PER_SEC;
+        fileData["elapse_time_seconds"] = static_cast<double>(processingTime.end_time - processingTime.start_time) / CLOCKS_PER_SEC;
 
         filesArray.push_back(fileData);
     }
@@ -130,12 +136,8 @@ void writeToJSON(const std::string& filename)
     }
 }
 
-
 int main(int argc, char *argv[])
 {
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
-
     startTime = clock();
 
     if (argc < 2)
@@ -146,22 +148,22 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        std::string inputFilename = std::string("files/in/") + argv[i];
+        std::string inputFilename = std::string(ssdDirectoryIn) + argv[i];
         if (fileNamesSet.find(inputFilename) != fileNamesSet.end())
         {
-            std::cout << "File '" << inputFilename << "' already processed. Skipping." << std::endl;
+            std::cout << "File '" << inputFilename << "' reoccurs. Skipping." << std::endl;
             continue;
         }
         fileNamesSet.insert(inputFilename);
 
-        std::string outputFilename = std::string("files/out/") + "out_" + argv[i];
+        std::string outputFilename = std::string(ssdDirectoryOut) + "out_" + argv[i];
 
         processFile(inputFilename, outputFilename);
     }
 
     endTime = clock();
 
-    writeToJSON("file_processing_times.json");
+    writeToJSON("file_processing_times_a.json");
 
     return 0;
 }
