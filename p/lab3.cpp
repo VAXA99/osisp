@@ -5,21 +5,24 @@
 #include <string>
 #include <iomanip>
 
-// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 std::string sharedString = "ABCDE";
 clock_t delayTime;
 HANDLE hThread;
+HANDLE semaphore;
 DWORD threadID;
 
 struct LogJournal
 {
     int operationNumber;
     int pressedKeyCode;
-    DWORD threadID;
+    DWORD ThreadID;
+    clock_t enteringCriticalSectionTime;
+    clock_t leavingCriticalSectionTime;
     clock_t operationStartTime;
     clock_t operationEndTime;
-    std::string R;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
-    std::string Rc; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    clock_t waitingTime;
+    std::string R;
+    std::string Rc;
 } logJournal[1000];
 
 void delay(clock_t delayTime)
@@ -76,7 +79,10 @@ std::string shiftString(const std::string &str, bool isLeft)
 
 DWORD WINAPI operationThreadProc(LPVOID param)
 {
+    WaitForSingleObject(semaphore, INFINITE);
+
     LogJournal *logEntry = static_cast<LogJournal *>(param);
+    logEntry->enteringCriticalSectionTime = clock();
     int currentKeyCode = logEntry->pressedKeyCode;
     bool isLeft = (currentKeyCode == VK_LEFT);
 
@@ -87,8 +93,13 @@ DWORD WINAPI operationThreadProc(LPVOID param)
     delay(delayTime);
 
     sharedString = buffer;
+
     logEntry->R = sharedString;
     logEntry->operationEndTime = clock();
+    logEntry->waitingTime = logEntry->operationEndTime - logEntry->operationStartTime;
+    logEntry->leavingCriticalSectionTime = clock();
+
+    ReleaseSemaphore(semaphore, 1, NULL);
 
     return 0;
 }
@@ -100,20 +111,26 @@ void displayLogJournalHeader()
               << std::setw(10) << "Thread ID" << " | "
               << std::setw(11) << "Start Time" << " | "
               << std::setw(9) << "End Time" << " | "
-              << std::setw(6) << "R" << " | "
-              << std::setw(6) << "Rc" << std::endl;
-    std::cout << "------------------------------------------------------------------------------" << std::endl;
+              << std::setw(10) << "Enter CS" << " | "
+              << std::setw(10) << "Leave CS" << " | "
+              << std::setw(10) << "Wait Time" << " | "
+              << std::setw(7) << "R" << " | "
+              << std::setw(7) << "Rc" << std::endl;
+    std::cout << "--------------------------------------------------------------------------------------------------------------------" << std::endl;
 }
 
 void displayLogJournalEntry(const LogJournal &entry)
 {
     std::cout << std::setw(5) << entry.operationNumber << " | "
               << std::setw(4) << entry.pressedKeyCode << " | "
-              << std::setw(10) << entry.threadID << " | "
+              << std::setw(10) << entry.ThreadID << " | "
               << std::setw(11) << entry.operationStartTime << " | "
               << std::setw(9) << entry.operationEndTime << " | "
-              << std::setw(6) << entry.R << " | "
-              << std::setw(6) << entry.Rc << std::endl;
+              << std::setw(10) << entry.enteringCriticalSectionTime << " | "
+              << std::setw(10) << entry.leavingCriticalSectionTime << " | "
+              << std::setw(10) << entry.waitingTime << " | "
+              << std::setw(7) << entry.R << " | "
+              << std::setw(7) << entry.Rc << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -123,11 +140,12 @@ int main(int argc, char *argv[])
 
     if (argc != 2)
     {
-        printf("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: %s <пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ>\n", argv[0]);
+        printf("использование: %s <время задержки>\n", argv[0]);
         return 1;
     }
 
     delayTime = atoi(argv[1]);
+    semaphore = CreateSemaphore(NULL, 1, 1, NULL);
 
     int operationIndex = 0;
     int displayIndex = 1;
@@ -154,7 +172,7 @@ int main(int argc, char *argv[])
             bool isLeft = (currentKeyCode == VK_LEFT);
             controlString = shiftString(controlString, isLeft);
 
-            logJournal[operationIndex].threadID = threadID;
+            logJournal[operationIndex].ThreadID = threadID;
             logJournal[operationIndex].Rc = controlString;
             ResumeThread(hThread);
         }
@@ -166,5 +184,6 @@ int main(int argc, char *argv[])
         }
     }
 
+    CloseHandle(semaphore);
     return 0;
 }
