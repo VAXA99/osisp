@@ -5,7 +5,7 @@
 #include <string>
 #include <iomanip>
 
-std::string sharedString = "ABCDE";
+std::string R = "ABCDE";
 clock_t delayTime;
 HANDLE hThread;
 HANDLE semaphore;
@@ -86,15 +86,15 @@ DWORD WINAPI operationThreadProc(LPVOID param)
     int currentKeyCode = logEntry->pressedKeyCode;
     bool isLeft = (currentKeyCode == VK_LEFT);
 
-    std::string buffer = sharedString;
+    std::string buffer = R;
 
     delay(delayTime);
     buffer = shiftString(buffer, isLeft);
     delay(delayTime);
 
-    sharedString = buffer;
+    R = buffer;
 
-    logEntry->R = sharedString;
+    logEntry->R = R;
     logEntry->operationEndTime = clock();
     logEntry->waitingTime = logEntry->operationEndTime - logEntry->operationStartTime;
     logEntry->leavingCriticalSectionTime = clock();
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
     if (argc != 2)
     {
-        printf("использование: %s <время задержки>\n", argv[0]);
+        printf("Р Р°Р±РѕС‚Р° РїСЂРѕРіСЂР°РјРјС‹: %s <РІСЂРµРјСЏ Р·Р°РґРµСЂР¶РєРё>\n", argv[0]);
         return 1;
     }
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     int operationIndex = 0;
     int displayIndex = 1;
     bool running = true;
-    std::string controlString = sharedString;
+    std::string controlString = R;
     logJournal[1].operationEndTime = 0;
 
     displayLogJournalHeader();

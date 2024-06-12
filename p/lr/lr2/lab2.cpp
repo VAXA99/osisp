@@ -5,8 +5,7 @@
 #include <string>
 #include <iomanip>
 
-// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
-std::string sharedString = "ABCDE";
+std::string R = "ABCDE";
 clock_t delayTime;
 HANDLE hThread;
 DWORD threadID;
@@ -18,8 +17,8 @@ struct LogJournal
     DWORD threadID;
     clock_t operationStartTime;
     clock_t operationEndTime;
-    std::string R;  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
-    std::string Rc; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    std::string R;  
+    std::string Rc; 
 } logJournal[1000];
 
 void delay(clock_t delayTime)
@@ -80,14 +79,14 @@ DWORD WINAPI operationThreadProc(LPVOID param)
     int currentKeyCode = logEntry->pressedKeyCode;
     bool isLeft = (currentKeyCode == VK_LEFT);
 
-    std::string buffer = sharedString;
+    std::string buffer = R;
 
     delay(delayTime);
     buffer = shiftString(buffer, isLeft);
     delay(delayTime);
 
-    sharedString = buffer;
-    logEntry->R = sharedString;
+    R = buffer;
+    logEntry->R = R;
     logEntry->operationEndTime = clock();
 
     return 0;
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 
     if (argc != 2)
     {
-        printf("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: %s <пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ>\n", argv[0]);
+        printf("Работа программы: %s <время задержки>\n", argv[0]);
         return 1;
     }
 
@@ -132,7 +131,7 @@ int main(int argc, char *argv[])
     int operationIndex = 0;
     int displayIndex = 1;
     bool running = true;
-    std::string controlString = sharedString;
+    std::string Rc = R;
     logJournal[1].operationEndTime = 0;
 
     displayLogJournalHeader();
@@ -152,10 +151,10 @@ int main(int argc, char *argv[])
 
             hThread = CreateThread(NULL, 0, operationThreadProc, &logJournal[operationIndex], CREATE_SUSPENDED, &threadID);
             bool isLeft = (currentKeyCode == VK_LEFT);
-            controlString = shiftString(controlString, isLeft);
+            Rc = shiftString(Rc, isLeft);
 
             logJournal[operationIndex].threadID = threadID;
-            logJournal[operationIndex].Rc = controlString;
+            logJournal[operationIndex].Rc = Rc;
             ResumeThread(hThread);
         }
 
