@@ -17,8 +17,11 @@ struct LogJournal
     int operationNumber;
     int pressedKeyCode;
     DWORD ThreadID;
+    clock_t enteringCriticalSectionTime;
+    clock_t leavingCriticalSectionTime;
     clock_t operationStartTime;
     clock_t operationEndTime;
+    clock_t waitingTime;
     int R1; 
     int R1c;
     int R2;
@@ -74,6 +77,9 @@ LPTHREAD_START_ROUTINE ThreadProc(LPVOID lpParam)
 
     LogJournal *p = (LogJournal *)lpParam;
 
+    p->enteringCriticalSectionTime = clock();
+
+
     int R1buf = R1;
     int R2buf = R2;
 
@@ -87,6 +93,9 @@ LPTHREAD_START_ROUTINE ThreadProc(LPVOID lpParam)
     p->R1 = R1;
     p->R2 = R2;
     p->operationEndTime = clock();
+    p->waitingTime = p->operationEndTime - p->operationStartTime;
+    p->leavingCriticalSectionTime = clock();
+
 
     ReleaseMutex(mutex);
 
@@ -100,11 +109,14 @@ void displayLogJournalHeader()
               << std::setw(10) << "Thread ID" << " | "
               << std::setw(11) << "Start Time" << " | "
               << std::setw(9) << "End Time" << " | "
+              << std::setw(10) << "Enter CS" << " | "
+              << std::setw(10) << "Leave CS" << " | "
+              << std::setw(10) << "Wait Time" << " | "
               << std::setw(6) << "R1" << " | "
               << std::setw(6) << "R1c" << " | "
               << std::setw(6) << "R2" << " | "
               << std::setw(6) << "R2c" << std::endl;
-    std::cout << "----------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "---------------------------------------------------------------------------------------------------------------------------------" << std::endl;
 }
 
 void displayLogJournalEntry(const LogJournal &entry)
@@ -114,6 +126,9 @@ void displayLogJournalEntry(const LogJournal &entry)
               << std::setw(10) << entry.ThreadID << " | "
               << std::setw(11) << entry.operationStartTime << " | "
               << std::setw(9) << entry.operationEndTime << " | "
+              << std::setw(11) << entry.enteringCriticalSectionTime << " | "
+              << std::setw(9) << entry.leavingCriticalSectionTime<< " | "
+              << std::setw(9) << entry.waitingTime<< " | "
               << std::setw(6) << entry.R1 << " | "
               << std::setw(6) << entry.R1c << " | "
               << std::setw(6) << entry.R2 << " | "
